@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const GradeDao = require('../dao/gradeDao');
+const { check, validationResult } = require('express-validator/check');
 
 /* GET grades listing. */
 router.get('/', function(req, res, next) {
@@ -10,7 +11,17 @@ router.get('/', function(req, res, next) {
 });
 
 /* Add grade in grades list */
-router.post('/', function(req, res, next) {
+router.post('/', [check('name').isLength({min:1}).withMessage('Name must not be empty'),
+check('course').isLength({min:1}).withMessage('Course must not be empty'),
+check('grade').isLength({min:1}).withMessage('Grade must not be empty')], function(req, res, next) {
+  
+  const errors=validationResult(req);
+  if(!errors.isEmpty()){
+    return res.status(422).json({errors: errors.array()});
+  }
+
+  req.assert('name', 'name is required').notEmpty();
+  
   GradeDao.addGrade(req.body).then((data)=>{res.status(200).end(data);})
                                     .catch((err)=>{res.status(500).end(err);})
 });
